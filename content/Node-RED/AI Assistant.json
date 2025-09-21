@@ -23,12 +23,13 @@
             "1810d1ae85e8b3cc",
             "ab14006aa6efe0d5",
             "815a59e93af79cbe",
-            "d7d0ad5b63bc0a7d"
+            "d7d0ad5b63bc0a7d",
+            "dd7015afdcfd34ce"
         ],
         "x": 34,
         "y": 179,
         "w": 972,
-        "h": 202
+        "h": 222
     },
     {
         "id": "c141aaf92d8678fc",
@@ -57,7 +58,7 @@
         "upload": false,
         "swaggerDoc": "",
         "x": 130,
-        "y": 280,
+        "y": 300,
         "wires": [
             [
                 "26b60639d30f412b",
@@ -74,7 +75,7 @@
         "statusCode": "",
         "headers": {},
         "x": 330,
-        "y": 220,
+        "y": 260,
         "wires": []
     },
     {
@@ -98,7 +99,7 @@
         "to": "",
         "reg": false,
         "x": 360,
-        "y": 280,
+        "y": 300,
         "wires": [
             [
                 "ab14006aa6efe0d5",
@@ -126,7 +127,7 @@
         "templateScope": "local",
         "className": "",
         "x": 920,
-        "y": 340,
+        "y": 360,
         "wires": [
             []
         ]
@@ -179,7 +180,7 @@
         "payload": "[]",
         "payloadType": "json",
         "x": 530,
-        "y": 340,
+        "y": 360,
         "wires": [
             [
                 "26aa57cfd87d23d6"
@@ -201,7 +202,7 @@
         "statusVal": "",
         "statusType": "auto",
         "x": 520,
-        "y": 240,
+        "y": 260,
         "wires": []
     },
     {
@@ -226,7 +227,7 @@
         "repair": false,
         "outputs": 2,
         "x": 530,
-        "y": 280,
+        "y": 300,
         "wires": [
             [
                 "d7d0ad5b63bc0a7d"
@@ -257,10 +258,50 @@
         "to": "",
         "reg": false,
         "x": 700,
-        "y": 240,
+        "y": 260,
         "wires": [
             [
                 "26aa57cfd87d23d6"
+            ]
+        ]
+    },
+    {
+        "id": "dd7015afdcfd34ce",
+        "type": "ui-button",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "group": "b54d84037ffd582b",
+        "name": "",
+        "label": "Reset Chart",
+        "order": 2,
+        "width": 0,
+        "height": 0,
+        "emulateClick": false,
+        "tooltip": "",
+        "color": "",
+        "bgcolor": "",
+        "className": "",
+        "icon": "",
+        "iconPosition": "left",
+        "payload": "",
+        "payloadType": "str",
+        "topic": "topic",
+        "topicType": "msg",
+        "buttonColor": "",
+        "textColor": "",
+        "iconColor": "",
+        "enableClick": true,
+        "enablePointerdown": false,
+        "pointerdownPayload": "",
+        "pointerdownPayloadType": "str",
+        "enablePointerup": false,
+        "pointerupPayload": "",
+        "pointerupPayloadType": "str",
+        "x": 530,
+        "y": 220,
+        "wires": [
+            [
+                "d7d0ad5b63bc0a7d"
             ]
         ]
     },
