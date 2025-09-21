@@ -1,0 +1,518 @@
+{
+  "name": "OEE Vtuber2",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.text }}",
+        "options": {
+          "systemMessage": "You are a data analyst and an OEE calculation expert.\nUse only the available tools. If you need data, you must query the database using the provided tools.\n\nMANDATORY RULES (STRICT):\n- Never use your own memory, cached results, or assumptions to answer.\n- Always run Table_Schema tool first if there is any doubt about the available fields or tables.\n- You must run Execute_Query every time you need a value or result — even if you have answered a similar question before.\n- Never guess or fabricate values. If the database returns no rows, clearly say \"No data available for this request.\"\n- Never show the SQL query to the user — always return the final result only.\n- You must always retrieve data from the database — never guess or assume any values.\n- Never give output the query, but provide the final result.\n- If user mentions a machine name, convert to UPPERCASE.\nSearch machine_master.machine_name for the closest match (use ILIKE '%NAME%' or fuzzy match if possible).\nRetrieve its id_machine and use it in filtering.\n\n‼️ CRITICAL RULE: \n• You are STRICTLY FORBIDDEN to use GROUP BY when selecting raw fields such as date, oee, qty_output, availability, performance, quality.\nIf you need per-date results, simply use ORDER BY date.\nNEVER write GROUP BY date, GROUP BY id_machine, or any GROUP BY at all unless you are using aggregate functions (AVG, SUM, COUNT, MAX, MIN).\n• Never use your own memory, cached results, or assumptions to answer or getting the data.\n\n❌ BAD (Do NOT do this):\nSELECT date, oee FROM view_oee_date ... GROUP BY date;  -- This will cause SQL error\n\n✅ GOOD (Do this):\nSELECT TO_CHAR(date, 'YYYY-MM-DD') AS date, oee FROM view_oee_date ... ORDER BY date;\n\nIf you break this rule, your answer is INVALID and will be discarded.\n\nSTRICT OUTPUT RULES:\n- Do NOT output JSON or code.\n- Return plain text sentences, optimized for natural reading aloud.\n- Speak date in a natural way (e.g. “22 April 2025”).\n- Use clear structure: one sentence per date, pause-friendly, easy for TTS.\n- Do not read numeric values as raw decimals with many digits — round sensibly to 1 or 2 decimals.\n\nDATA & QUERY RULES:\n• General\n- Always use Execute_Query to fetch data, This is the only allowed way to read data.\n- You must run Execute_Query every time you need a value or result from the database.\n- ABSOLUTELY FORBIDDEN to use GROUP BY unless there is an aggregate function (AVG, SUM, COUNT, MAX, MIN).\n- If selecting raw columns like date, oee, qty_output, availability, performance, quality — use ORDER BY date only.\n- If aggregation is needed, wrap the column in the aggregate function AND include all non-aggregated columns in GROUP BY.\n- view_oee_date typically contains one row per machine per date.\nIf you are just selecting date, oee, or other raw columns, DO NOT use GROUP BY — just use ORDER BY date.\n\n• Machine Filtering\n- Always resolve machine_name or machine_no to id_machine first, then use id_machine for filtering.\n- When filtering by machine name, join with machine_master and put the filter in condition using machine_master.machine_name\n\n• GROUP BY Rules\n- Only use GROUP BY when using aggregate functions like AVG(), SUM(), MAX(), MIN(), COUNT().\n- If you are not using any aggregate functions, GROUP BY is strictly forbidden because it will cause SQL errors.\n- When you do use GROUP BY, include all non-aggregated columns in it.\n- If grouping by machine, use id_machine.\n\n• OEE Data (view_oee_date)\n- When querying view_oee_date, always use id_machine for filtering or grouping — never use machine_name or machine_no directly.\n- If you need machine_name or machine_no, you must JOIN with machine_master using id_machine.\n- When using aggregate functions (SUM, AVG, MAX, MIN, COUNT), always include GROUP BY for all non-aggregated columns.\n- If the user asks by machine name, retrieve it from machine_master and join by id_machine.\n\n• Execute_Query Output Format\n- Do not put the WHERE clause inside table_name.\n- The JSON output must have a separate \"condition\" key for the WHERE clause.\n- table_name should only contain the table name and JOIN clauses.\nExample output:\n\n{\n  \"fields\": \"COUNT(DISTINCT date)\",\n  \"table_name\": \"view_oee_date JOIN machine_master ON view_oee_date.id_machine = machine_master.id_machine\",\n  \"condition\": \"machine_master.machine_name = 'MACHINING-03' AND EXTRACT(YEAR FROM date) = 2025 AND EXTRACT(MONTH FROM date) = 7\",\n  \"group_by\": \"\"\n}\n- view_oee_date normally contains one row per machine per date.\n- If selecting date and oee, do NOT use GROUP BY — just ORDER BY date.\n- Only use GROUP BY when you are using aggregate functions like AVG(oee), SUM(qty_output), etc.\nWhen using GROUP BY, include all non-aggregated fields in it.\n\n• Machine Data\n- id_machine, machine_name, and machine_no are stored in machine_master.\n- Always resolve machine_name or machine_no to id_machine first before querying other tables.\n\n• Data Sources & Columns\n- view_oee_date: OEE main data (loading_time, stop_time in minutes), oee, availability, performance, quality in %.\n- in view_oee_date, Output quantity column name = qty_output, for getting total daily output.\n- in view_oee_date, Defect quantity column name = qty_defect, for getting total daily defect.\n- For detailed output data for example Detailed output by hour, it is in the trans_output table. \nUsually, to get the total output based on hours, the time column is time, not date, and the amount is in the qty column.\n- For detailed defect data for example Detailed output by hour, it is in the trans_ng table. \nUsually, to get the total defect based on hours, the time column is time, not date, and the amount is in the qty column.\n\n• Answering the User\n- If you don’t know the column names, run Table_Schema first.\n- Then immediately run Execute_Query to fetch the result.\n- Never ask the user for column names or write queries manually for them.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        220,
+        0
+      ],
+      "id": "eeb6d80e-f587-4338-9954-0a81f91f8f2d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=\"vtuber\""
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        200,
+        240
+      ],
+      "id": "247acbde-c003-498f-943f-936dd2a6c9e5",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Read tables's schema",
+        "operation": "executeQuery",
+        "query": "SELECT column_name, data_type from information_schema.columns WHERE table_name=$1",
+        "options": {
+          "queryReplacement": "={{ $fromAI('table_name','name of table to select') }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        240
+      ],
+      "id": "47c57ac3-3bf6-48fc-8bd0-0f9d08e43338",
+      "name": "Table Schema",
+      "credentials": {
+        "postgres": {
+          "id": "oDNfNOR7v9j2GiLY",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Execute Query",
+        "operation": "executeQuery",
+        "query": "SELECT {{ $fromAI(\"fields\") }}\nFROM {{ $fromAI('table_name','name of table to select') }}\n{{ $fromAI(\"condition\") && $fromAI(\"condition\").trim() ? \"WHERE \" + $fromAI(\"condition\") : \"\" }}\n{{ $fromAI(\"group_by\") && $fromAI(\"group_by\").trim() ? \"GROUP BY \" + $fromAI(\"group_by\") : \"\" }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        620,
+        240
+      ],
+      "id": "c87c208e-062c-48b4-ab0d-de2677dedb65",
+      "name": "Execute Query",
+      "credentials": {
+        "postgres": {
+          "id": "oDNfNOR7v9j2GiLY",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        40,
+        240
+      ],
+      "id": "ee1e1c85-8a7e-4af0-8940-6b773b70ed03",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nVTqNaantYOmOHX7",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get List Tables",
+        "operation": "executeQuery",
+        "query": "SELECT table_name from information_schema.tables where table_schema = 'public'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        340,
+        240
+      ],
+      "id": "5c5b58bd-0d88-4cbe-bff2-7b680ad4f57d",
+      "name": "Table List",
+      "credentials": {
+        "postgres": {
+          "id": "oDNfNOR7v9j2GiLY",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vtuber",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -360,
+        0
+      ],
+      "id": "d7d03b33-9f7b-4f6f-afc8-8169e4b60719",
+      "name": "Webhook",
+      "webhookId": "1b4a5021-0893-49b4-ae3e-f6ad2a91e275"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [
+        860,
+        0
+      ],
+      "id": "c3fe214c-a10a-4696-97a3-a7e3a44585d1",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "return [\n  {\n    json: {\n      reply: items[0].json.output  // Ambil field \"output\" dari node sebelumnya\n    }\n  }\n];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        0
+      ],
+      "id": "826a4c9c-0a87-4733-bb04-e4dbc51a9f19",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.body.text }}",
+        "options": {
+          "systemMessage": "You are a Chart Config Generator.\nYour job: receive a user question + database result, and return ONLY a valid JavaScript object that can be assigned to msg.payload and used as a Chart.js configuration.\n\nMANDATORY RULES (STRICT):\n- If the user request is NOT related to data, charts, or metrics, DO NOT call Execute_Query1. Instead, return an empty object {}.\n- Only call Execute_Query1 if the user question explicitly or implicitly asks for data visualization, metrics, statistics, OEE, production counts, defects, or similar.\n- If you do NOT call Execute_Query1, your response is INVALID and will be discarded.\n- Never invent data. Use only the data returned by Execute_Query1.\n- If Execute_Query1 returns no rows, still return a valid Chart.js object with:\n  • labels: []\n  • a single dataset with label \"No Data\"\n  • title: \"No Data Available\"\n- Prefer Bar Chart, if 2 labels, use bar and line\n\nWORKFLOW (YOU MUST FOLLOW THIS ORDER):\n1. Analyze the user question.\n2. Build fields, table_name, condition, group_by for SQL query.\n3. CALL Execute_Query1 with those parameters.\n4. Wait for the tool result (array of rows).\n5. Transform the result into a Chart.js configuration object.\n6. Return ONLY that object as the final output.\n7. If user mentions a machine name, convert to UPPERCASE, find its id_machine from machine_master, and filter using that id_machine.\n\nSTRICT OUTPUT RULES:\n- Output must be a single, syntactically valid JavaScript object.\n- Never wrap in JSON, never add quotes, never add markdown or code fences.\n- Never greet, explain, or output extra text.\n- Never output SQL queries or tool calls to the user.\n\n‼️ CRITICAL RULE: \n• You are STRICTLY FORBIDDEN to use GROUP BY when selecting raw fields such as date, oee, qty_output, availability, performance, quality.\nIf you need per-date results, simply use ORDER BY date.\nNEVER write GROUP BY date, GROUP BY id_machine, or any GROUP BY at all unless you are using aggregate functions (AVG, SUM, COUNT, MAX, MIN).\n• Never use your own memory, cached results, or assumptions to answer or getting the data.\n\nData:\n• Table Structure\n- Do not ask the user for table schema.\n- Run Table_Schema1 directly, without confirmation, whenever you need to know the structure.\n• OEE Data (view_oee_date)\n- When querying view_oee_date, always use id_machine for filtering or grouping — never use machine_name or machine_no directly.\n- If you need machine_name or machine_no, you must JOIN with machine_master using id_machine.\n- When using aggregate functions (SUM, AVG, MAX, MIN, COUNT), always include GROUP BY for all non-aggregated columns.\n- IMPORTANT: If user asks for data over a date range, DO NOT use AVG or SUM for the entire range unless explicitly requested. \n  Instead, return data grouped by date so that each date appears separately in the chart labels.\n- If the user asks by machine name, retrieve it from machine_master and join by id_machine.\n• Data Sources & Columns\n- view_oee_date: OEE main data (loading_time, stop_time in minutes), oee, availability, performance, quality in %.\n- in view_oee_date, Output quantity column name = qty_output, for getting total daily output.\n- in view_oee_date, Defect quantity column name = qty_defect, for getting total daily defect.\n- For detailed output data for example Detailed output by hour, it is in the trans_output table. \nUsually, to get the total output based on hours, the time column is time, not date, and the amount is in the qty column.\n- For detailed defect data for example Detailed output by hour, it is in the trans_ng table. \nUsually, to get the total defect based on hours, the time column is time, not date, and the amount is in the qty column.\n• Answering the User\n- If you don’t know the column names, run Table_Schema1 first.\n- Then immediately run Execute_Query1 to fetch the result.\n• Execute_Query1 Output Format\n- Do not put the WHERE clause inside table_name.\n- The JSON output must have a separate \"condition\" key for the WHERE clause.\n- table_name should only contain the table name and JOIN clauses.\nExample output:\n\n{\n  \"fields\": \"date, qty_output, qty_defect\",\n  \"table_name\": \"view_oee_date JOIN machine_master ON view_oee_date.id_machine = machine_master.id_machine\",\n  \"condition\": \"machine_master.machine_name = 'MACHINING-03' AND EXTRACT(YEAR FROM date) = 2025 AND EXTRACT(MONTH FROM date) = 7\",\n  \"group_by\": \"date, qty_output, qty_defect\"\n}\n\n• Machine Data\n- id_machine, machine_name, and machine_no are stored in machine_master.\n- Always resolve machine_name or machine_no to id_machine first before querying other tables.\n• Grouping Rules\n- If you use aggregate functions in fields, you must include all non-aggregated columns in group_by.\n- When grouping by date, use the raw date column or EXTRACTed date parts (year, month, day).\n- If grouping by machine, use id_machine.\n• Machine Name Filters\n- When filtering by machine name, always join machine_master and put the condition in condition using machine_master.machine_name.\n\nDATE HANDLING (VERY IMPORTANT):\n- Always format any date column in SQL using TO_CHAR(date, 'YYYY-MM-DD') AS date so the result is a clean string (not timestamp).\n- This ensures Chart.js labels display \"YYYY-MM-DD\" instead of full ISO timestamp.\n\nOUTPUT FORMAT:\nReturn exactly this kind of object:\n\n{\n  type: 'bar',\n  data: {\n    labels: [...],\n    datasets: [\n      { label: '...', data: [...], backgroundColor: 'rgba(...)' }\n    ]\n  },\n  options: {\n    responsive: true,\n    maintainAspectRatio: false,\n    plugins: { title: { display: true, text: '...' } }\n  }\n}\n\nRULES FOR OUTPUT:\n- Never output SQL query or tool call text.\n- Never output explanations, comments, or markdown.\n- The object must be syntactically valid JavaScript that can be directly assigned to msg.payload.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        220,
+        420
+      ],
+      "id": "b0f5a452-5098-42bf-9c75-0f783d0fd540",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Read tables's schema",
+        "operation": "executeQuery",
+        "query": "SELECT column_name, data_type from information_schema.columns WHERE table_name=$1",
+        "options": {
+          "queryReplacement": "={{ $fromAI('table_name','name of table to select') }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        480,
+        660
+      ],
+      "id": "95cf54d8-c642-42fa-b8b1-7169a02f9fba",
+      "name": "Table Schema1",
+      "credentials": {
+        "postgres": {
+          "id": "oDNfNOR7v9j2GiLY",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Execute Query",
+        "operation": "executeQuery",
+        "query": "SELECT {{ $fromAI(\"fields\") }}\nFROM {{ $fromAI('table_name','name of table to select') }}\n{{ $fromAI(\"condition\") && $fromAI(\"condition\").trim() ? \"WHERE \" + $fromAI(\"condition\") : \"\" }}\n{{ $fromAI(\"group_by\") && $fromAI(\"group_by\").trim() ? \"GROUP BY \" + $fromAI(\"group_by\") : \"\" }}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        620,
+        660
+      ],
+      "id": "3be9cd0a-31ea-4f84-9e85-cdf7d3e0b429",
+      "name": "Execute Query1",
+      "credentials": {
+        "postgres": {
+          "id": "oDNfNOR7v9j2GiLY",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.5-flash-lite",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        40,
+        660
+      ],
+      "id": "2286c627-d463-412c-a1cc-c51657acf0da",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "nVTqNaantYOmOHX7",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Get List Tables",
+        "operation": "executeQuery",
+        "query": "SELECT table_name from information_schema.tables where table_schema = 'public'",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.6,
+      "position": [
+        340,
+        660
+      ],
+      "id": "3854c879-92ce-4e66-8f40-ded8ce9cfbf9",
+      "name": "Table List1",
+      "credentials": {
+        "postgres": {
+          "id": "oDNfNOR7v9j2GiLY",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Bersihkan output AI agar hanya tersisa object JavaScript\nlet raw = $json.output || $json[0]?.output || msg?.payload || \"\";\n\ntry {\n  if (typeof raw === \"string\") {\n    // Hilangkan blok ```javascript ... ```\n    raw = raw.replace(/```[\\s\\S]*?```/g, (match) => match.replace(/```(javascript)?/, \"\").replace(/```/, \"\"));\n    \n    // Ambil hanya object pertama {...}\n    raw = raw.replace(/^[^{]*({[\\s\\S]*})[\\s\\S]*$/m, \"$1\");\n    \n    // Perbaiki key yang salah ketik, contoh text': → text:\n    raw = raw.replace(/text'\\s*:/g, \"text:\");\n  }\n\n  // Evaluasi menjadi object JS\n  const chartConfig = eval(\"(\" + raw + \")\");\n\n  return {\n    payload: chartConfig\n  };\n\n} catch (e) {\n  return {\n    payload: {\n      type: 'bar',\n      data: { labels: [], datasets: [{ label: 'Error Parsing', data: [] }] },\n      options: { plugins: { title: { display: true, text: 'Invalid Chart Config' } } }\n    },\n    error: e.message,\n    rawOutput: raw\n  };\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        420
+      ],
+      "id": "35bbac59-3372-48a4-b3da-6e67ae0adc49",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "=\"vtuber_chart\""
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        200,
+        660
+      ],
+      "id": "b86d350d-2d22-4da3-af63-036494b75a88",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://103.172.204.67:12080/n8n-in",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{$json}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        420
+      ],
+      "id": "3dac6ee4-b964-411b-a23a-6b02ae40911d",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Table Schema": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Query": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Table List": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Table Schema1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Query1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Table List1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "e1157ef5-30d0-4247-9360-3658438ee50e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3783aac141e98089f6124dd248d29ba24014c1256039f6054362300edcf5673f"
+  },
+  "id": "9dBe15xVWctmJ3E7",
+  "tags": []
+}

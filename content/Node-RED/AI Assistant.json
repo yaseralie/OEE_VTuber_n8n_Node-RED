@@ -1,0 +1,384 @@
+[
+    {
+        "id": "b8c361cdaf2522f8",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "3a6e9829967595cf",
+        "type": "group",
+        "z": "b8c361cdaf2522f8",
+        "name": "Data From n8n",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "d4c2cd7476a32f95",
+            "26b60639d30f412b",
+            "e6c1939f375c4cc7",
+            "26aa57cfd87d23d6",
+            "1810d1ae85e8b3cc",
+            "ab14006aa6efe0d5",
+            "815a59e93af79cbe",
+            "d7d0ad5b63bc0a7d"
+        ],
+        "x": 34,
+        "y": 179,
+        "w": 972,
+        "h": 202
+    },
+    {
+        "id": "c141aaf92d8678fc",
+        "type": "group",
+        "z": "b8c361cdaf2522f8",
+        "name": "Avatar",
+        "style": {
+            "label": true
+        },
+        "nodes": [
+            "5d440297f75f832c"
+        ],
+        "x": 34,
+        "y": 79,
+        "w": 172,
+        "h": 82
+    },
+    {
+        "id": "d4c2cd7476a32f95",
+        "type": "http in",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "",
+        "url": "/n8n-in",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 130,
+        "y": 280,
+        "wires": [
+            [
+                "26b60639d30f412b",
+                "e6c1939f375c4cc7"
+            ]
+        ]
+    },
+    {
+        "id": "26b60639d30f412b",
+        "type": "http response",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 330,
+        "y": 220,
+        "wires": []
+    },
+    {
+        "id": "e6c1939f375c4cc7",
+        "type": "change",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "payload.payload",
+                "tot": "msg"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 360,
+        "y": 280,
+        "wires": [
+            [
+                "ab14006aa6efe0d5",
+                "815a59e93af79cbe"
+            ]
+        ]
+    },
+    {
+        "id": "26aa57cfd87d23d6",
+        "type": "ui-template",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "group": "b54d84037ffd582b",
+        "page": "",
+        "ui": "",
+        "name": "",
+        "order": 1,
+        "width": 0,
+        "height": 0,
+        "head": "",
+        "format": "<template>\n  <div class=\"chart-container\">\n    <canvas ref=\"canvas\"></canvas>\n  </div>\n</template>\n\n<script>\nexport default {\n  watch: {\n    msg(val) {\n      if (!val || !val.payload) return;\n\n      const cfg = val.payload; // payload langsung config chart.js\n\n      const ctx = this.$refs.canvas.getContext('2d');\n      if (this.chart) this.chart.destroy();\n\n      // Buat chart baru dari payload\n      this.chart = new Chart(ctx, cfg);\n    }\n  },\n  mounted() {\n    // pastikan Chart.js dimuat sekali\n    if (!window.ChartLoading) {\n      window.ChartLoading = new Promise((resolve, reject) => {\n        const s = document.createElement(\"script\");\n        s.src = \"https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js\";\n        s.onload = resolve;\n        s.onerror = reject;\n        document.head.appendChild(s);\n      });\n    }\n  },\n  unmounted() {\n    if (this.chart) this.chart.destroy();\n  }\n};\n</script>\n\n<style>\n.chart-container {\n  position: relative;\n  height: 300px;\n}\n</style>\n",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 920,
+        "y": 340,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "5d440297f75f832c",
+        "type": "ui-template",
+        "z": "b8c361cdaf2522f8",
+        "g": "c141aaf92d8678fc",
+        "group": "f78d84d47a87bdcf",
+        "page": "",
+        "ui": "",
+        "name": "",
+        "order": 1,
+        "width": "12",
+        "height": "5",
+        "head": "",
+        "format": "<iframe src=\"https://103.171.85.170:12393/\"\nstyle=\"width: 100%; height: 400px; border: none;\"\n        allow=\"microphone; camera; clipboard-read; clipboard-write; autoplay; encrypted-media;\">\n</iframe>\n",
+        "storeOutMessages": true,
+        "passthru": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 120,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "1810d1ae85e8b3cc",
+        "type": "inject",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "[]",
+        "payloadType": "json",
+        "x": 530,
+        "y": 340,
+        "wires": [
+            [
+                "26aa57cfd87d23d6"
+            ]
+        ]
+    },
+    {
+        "id": "ab14006aa6efe0d5",
+        "type": "debug",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 520,
+        "y": 240,
+        "wires": []
+    },
+    {
+        "id": "815a59e93af79cbe",
+        "type": "switch",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "",
+        "property": "payload.data.datasets[0].label",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "cont",
+                "v": "Error",
+                "vt": "str"
+            },
+            {
+                "t": "else"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 530,
+        "y": 280,
+        "wires": [
+            [
+                "d7d0ad5b63bc0a7d"
+            ],
+            [
+                "26aa57cfd87d23d6"
+            ]
+        ]
+    },
+    {
+        "id": "d7d0ad5b63bc0a7d",
+        "type": "change",
+        "z": "b8c361cdaf2522f8",
+        "g": "3a6e9829967595cf",
+        "name": "",
+        "rules": [
+            {
+                "t": "set",
+                "p": "payload",
+                "pt": "msg",
+                "to": "[]",
+                "tot": "json"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 700,
+        "y": 240,
+        "wires": [
+            [
+                "26aa57cfd87d23d6"
+            ]
+        ]
+    },
+    {
+        "id": "b54d84037ffd582b",
+        "type": "ui-group",
+        "name": "Data",
+        "page": "4a4b28267133d18b",
+        "width": "12",
+        "height": 1,
+        "order": 2,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "f78d84d47a87bdcf",
+        "type": "ui-group",
+        "name": "Avatar",
+        "page": "4a4b28267133d18b",
+        "width": "12",
+        "height": 1,
+        "order": 1,
+        "showTitle": false,
+        "className": "",
+        "visible": "true",
+        "disabled": "false",
+        "groupType": "default"
+    },
+    {
+        "id": "4a4b28267133d18b",
+        "type": "ui-page",
+        "name": "AI Assistant",
+        "ui": "fa133c2baca5d4c8",
+        "path": "/assistant",
+        "icon": "robot-love-outline",
+        "layout": "grid",
+        "theme": "52d07d943e3b0741",
+        "breakpoints": [
+            {
+                "name": "Default",
+                "px": "0",
+                "cols": "3"
+            },
+            {
+                "name": "Tablet",
+                "px": "576",
+                "cols": "6"
+            },
+            {
+                "name": "Small Desktop",
+                "px": "768",
+                "cols": "9"
+            },
+            {
+                "name": "Desktop",
+                "px": "1024",
+                "cols": "12"
+            }
+        ],
+        "order": 7,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "fa133c2baca5d4c8",
+        "type": "ui-base",
+        "name": "My Dashboard",
+        "path": "/dashboard",
+        "appIcon": "",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control",
+            "ui-form",
+            "ui-text-input",
+            "ui-number-input",
+            "ui-file-input",
+            "ui-button",
+            "ui-button-group",
+            "ui-dropdown",
+            "ui-radio-group",
+            "ui-slider",
+            "ui-switch",
+            "ui-text",
+            "ui-table",
+            "ui-chart",
+            "ui-gauge",
+            "ui-markdown",
+            "ui-template",
+            "ui-audio"
+        ],
+        "showPathInSidebar": false,
+        "headerContent": "page",
+        "navigationStyle": "default",
+        "titleBarStyle": "default",
+        "notificationDisplayTime": 5
+    },
+    {
+        "id": "52d07d943e3b0741",
+        "type": "ui-theme",
+        "name": "Theme Name",
+        "colors": {
+            "surface": "#05304f",
+            "primary": "#05304f",
+            "bgPage": "#f5f0f0",
+            "groupBg": "#ffffff",
+            "groupOutline": "#000000"
+        },
+        "sizes": {
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px",
+            "density": "default"
+        }
+    }
+]
