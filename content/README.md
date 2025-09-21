@@ -146,7 +146,7 @@ Base URL:
 https://103.171.85.170:12393
 ```
 
-#### StAI Assistant With Avatar in OEE Monitoring System Open-LLM-VTuber
+#### AI Assistant With Avatar in OEE Monitoring System Open-LLM-VTuber
 <p align="center">
   <a href="https://www.youtube.com/watch?v=8UlB-iYJ-lQ" target="_blank">
     <img src="https://img.youtube.com/vi/8UlB-iYJ-lQ/0.jpg" alt="YouTube Video Thumbnail" width="480" />
