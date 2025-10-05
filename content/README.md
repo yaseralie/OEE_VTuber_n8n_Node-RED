@@ -92,6 +92,9 @@ Copy file main-nu7uwxNJ.js from this github, copy to folder /frontend/assets/
 
 ##### 8. Run Server
 ```
+cd Open-LLM-VTuber
+python3 -m venv venv
+source venv/bin/activate
 python3 run_server.py
 ```
 
